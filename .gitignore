@@ -1,0 +1,13 @@
+  
+.idea
+*.
+*~
+*.pyc
+__pycache__/
+.env
+.venv
+env/
+myvenv/
+.DS_Store
+db.sqlite3
+/static
