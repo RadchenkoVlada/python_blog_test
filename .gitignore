@@ -7,7 +7,7 @@ __pycache__/
 .env
 .venv
 env/
-myvenv/
+my_venv/
 .DS_Store
 db.sqlite3
 /static
