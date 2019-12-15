@@ -2,31 +2,66 @@
 <html>
     <head>
         <title>Vlada's blog</title>
-        <!-- To install Bootstrap you need to add the following lines to the <head> of your .html file 
-        This will not add any files to your project. These lines simply indicate files published on the Internet. -->
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-        <!-- We just told our template where our CSS file is -->
-        <link rel="stylesheet" href="{% static 'css/blog.css' %}">
-        <!-- customize the font of our header, this line imports a font called Lobster from Google Fonts -->
-        <link href='//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext' rel='stylesheet' type='text/css'>
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
     </head>
     <body>
-        <div class="page-header">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+        <div class='container'>
+            <!-- <header id="header" class="page-header"> -->
+            <a class="navbar-brand" href="">Django Blog</a>
+            <button class='navbar-toggler' type='button' data-toggle='collapse' data-target='#navbarCollapseLinks' aria-expanded='false' aria-label='Toggle Navigation'>
+            <span class='navbar-toggler-icon'></span>
+          </button>
+            <a class="nav-link" href="{% url 'post_new' %}"><span class="glyphicon glyphicon-plus"></span></a>
+
+            <div class='collapse navbar-collapse' id='navbarCollapseLinks'>
+            <ul class='navbar-nav'>
+                <ul class="navbar-nav">
             {% if user.is_authenticated %}
-            <a href="{% url 'post_new' %}" class="top-menu"><span class="glyphicon glyphicon-plus"></span></a>
+            
+                  <li class="nav-item">
+                    <a class="nav-link active" href="/logout">Logout</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="{% url 'post_new' %}">Add New Post</a>
+                  </li>
+
+            {% else %}
+
+                  <li class="nav-item">
+                    <a class="nav-link" href="/login">Sign in</a>
+                  </li>
+                  <li class="nav-item">
+                    <a class="nav-link" href="/user_registration">Registration</a>
+                  </li>
+
             {% endif %}
-            <h1><a href="/">Django Blog</a></h1>
+
+            </ul>
+
         </div>
-        <div class="content container">
+    </nav>
+    
+
+
+            <div class="content container">
             <div class="row">
                 <div class="col-md-8">
                     {% block content %}
-                    
                     {% endblock %}
                 </div>
             </div>
-        </div>
+
+    
+</nav>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  </body>
+
     </body>
 </html>

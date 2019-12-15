@@ -25,7 +25,7 @@ SECRET_KEY = '-t6c&mxdmvs0s-0y&=xrdpjgdth8altju#*9^9cgz#gi8k7!3d'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1',]
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 # Application definition
@@ -100,6 +100,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = (
+    ('django.contrib.auth.backends.ModelBackend'),
+)
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
