@@ -17,11 +17,6 @@ from django.contrib.auth import login, logout, authenticate
 from .forms import RegisterForm
 
 
-def logout_request(request):
-    logout(request)
-    messages.info(request, "Logget out successfully!")
-    return redirect("blog:post_list")
-
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
     return render(request=request, template_name='blog/post_list.html', context={'posts': posts})
@@ -35,7 +30,8 @@ def post_new(request):
             post.author = request.user
             post.published_date = timezone.now()
             post.save()
-            return redirect('post_detail', pk=post.pk)
+            # TODO: add success message
+            return redirect('post_list')
     else:
         form = PostForm()
     return render(request, 'blog/post_edit.html', {'form': form})
@@ -54,21 +50,20 @@ def user_registration(request):
             user = form.save()
             #validating the password match while creating the user.
             username = form.cleaned_data.get('username')
-            messages.success(request, f"New Account Created: {username}")
+            # messages.success(request, f"New Account Created: {username}")
             raw_pass = form.cleaned_data.get('password')
             login(request,user)
             # redirect to a new URL:
-            return redirect("blog:post_detail.html")
-        else:
-            for msg in form.error_messages:
-                messages.error(request, f"{msg}: form.error_messages[msg]")
-            return render(request = request,
-                          template_name = "blog/post_detail.html",
-                          context = {"form":form})
-
+            return redirect(reverse('post_list'))
+        # else:
+        #     for msg in form.error_messages:
+        #         # messages.error(request, f"{msg}: form.error_messages[msg]")
+        #     return render(request = request,
+        #                   template_name = "blog/user_registration.html",
+        #                   context = {"form":form})
     form = RegisterForm()
     return render(request = request,
-                          template_name = "blog/post_detail.html",
+                          template_name = "blog/user_registration.html",
                           context = {"form":form})
 
 
@@ -77,7 +72,7 @@ def user_registration(request):
 def logout_request(request):
     logout(request)
     # messages.info(request, "Logget out successfully!")
-    return redirect("blog:post_detail.html")
+    return redirect(reverse('post_list'))
 
 def login_request(request):
     if request.method == "POST":
@@ -89,13 +84,12 @@ def login_request(request):
             if user is not None:
                 login(request, user)
                 # messages.info(request, f"You are now logged in as {username}")
-                return redirect("blog:post_detail.html")
+                return redirect(reverse('post_list'))
         #     else:
         #         messages.error(request, "Invalid username or password")
         # else:
-        #     smessages.error(request, "Invalid username or password")
+        #     messages.error(request, "Invalid username or password")
     
-
     form = AuthenticationForm()
     return render(request,
                   "blog/login.html",

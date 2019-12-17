@@ -2,11 +2,8 @@ from django import forms
 from .models import Post
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-
 
 class PostForm(forms.ModelForm):
-
     class Meta:
         model = Post
         fields = ('title', 'text',)
@@ -25,7 +22,8 @@ class RegisterForm(UserCreationForm):
     	user.email = self.cleaned_data['email']
     	user.first_name = self.cleaned_data['first_name']
     	user.last_name = self.cleaned_data['last_name']
-
     	if commit:
     		user.save()
     	return user
+
+
