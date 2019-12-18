@@ -1,5 +1,5 @@
 {% load static %}
-
+/*
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
 
 h1 a {
@@ -15,9 +15,9 @@ body {
 .row{
   padding-top: 30px;
 }
-
+*/
 /* Selectors that start with the “.” - character refer to classes */
-
+/*
 .page-header h1, .page-header h1 a, .page-header h1 a:visited, .page-header h1 a:active {
     color: #ffffff;
     font-size: 36pt;
@@ -55,4 +55,8 @@ h1, h2, h3, h4 {
 
 .comment {
     margin: 20px 0px 20px 20px;
+}
+*/
+.replies {
+  margin-left: 50px;
 }
