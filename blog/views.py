@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.views.generic import CreateView
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
+from django.contrib import messages
 
 from blog.forms import RegisterForm
 from .models import Post, Comment
@@ -56,10 +57,17 @@ def user_registration(request):
             user = form.save()
             #validating the password match while creating the user.
             username = form.cleaned_data.get('username')
+            messages.success(request, f"New Account Created: {username}")
             raw_pass = form.cleaned_data.get('password')
             login(request,user)
             # redirect to a new URL:
             return redirect(reverse('post_list'))
+        else:
+            for msg in form.error_messages:
+                messages.error(request, f"{msg}: form.error_messages[msg]")
+            return render(request = request,
+                          template_name = "blog/user_registration.html",
+                          context = {"form":form})
     form = RegisterForm()
     return render(request = request,
                           template_name = "blog/user_registration.html",
@@ -68,6 +76,7 @@ def user_registration(request):
 
 def logout_request(request):
     logout(request)
+    messages.info(request, "Logget out successfully!")
     return redirect(reverse('post_list'))
 
 def login_request(request):
@@ -79,8 +88,13 @@ def login_request(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
+                messages.info(request, f"You are now logged in as {username}")
                 return redirect(reverse('post_list'))
-    
+            else:
+                messages.error(request, "Invalid username or password")
+        else:
+            messages.error(request, "Invalid username or password")
+            
     form = AuthenticationForm()
     return render(request,
                   "blog/login.html",
