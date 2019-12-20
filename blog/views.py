@@ -9,6 +9,7 @@ from django.views.generic import CreateView
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
+from django.core.paginator import Paginator
 
 from blog.forms import RegisterForm
 from .models import Post, Comment
@@ -46,7 +47,18 @@ def post_detail(request, pk):
         comments_tree.append(get_comments_tree_impl(comment))
     comments_tree = list(itertools.chain(*comments_tree))
 
-    return render(request, 'blog/post_detail.html', {'post': post, 'comments_tree': comments_tree})
+    paginator = Paginator(comments_tree, 3) # Show 25 contacts per page
+
+    page = request.GET.get('page')
+    if page == None:
+        page = 1
+
+    comments_tree_page = paginator.get_page(page)
+
+    print("paginator.num_pages = ", paginator.num_pages)
+    print("paginator.count = ", paginator.count)
+
+    return render(request, 'blog/post_detail.html', {'post': post, 'comments_tree_page': comments_tree_page})
 
 def user_registration(request):
     # if this is a POST request we need to process the form data
@@ -94,7 +106,7 @@ def login_request(request):
                 messages.error(request, "Invalid username or password")
         else:
             messages.error(request, "Invalid username or password")
-            
+
     form = AuthenticationForm()
     return render(request,
                   "blog/login.html",
