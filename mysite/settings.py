@@ -105,14 +105,6 @@ AUTHENTICATION_BACKENDS = (
     ('django.contrib.auth.backends.ModelBackend'),
 )
 
-MESSAGE_TAGS = {
-    messages.DEBUG: 'alert alert-light',
-    messages.INFO: 'alert alert-info',
-    messages.SUCCESS: 'alert alert-success',
-    messages.WARNING: 'alert alert-warning',
-    messages.ERROR: 'alert alert-danger',
-}
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 

@@ -27,7 +27,6 @@ class Comment(models.Model):
     # reply comments
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE)
 
-
     def __str__(self):
         return self.text
 
@@ -38,13 +37,4 @@ class Comment(models.Model):
         return self.children().count() > 0
 
     def nesting_index(self):
-        return 0 if self.parent == None else (self.parent.nesting_index() + 1)
-
-
-
-
-
-
-
-
-
+        return 0 if self.parent is None else (self.parent.nesting_index() + 1)

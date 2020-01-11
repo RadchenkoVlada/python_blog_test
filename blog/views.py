@@ -2,7 +2,6 @@ import itertools
 
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from django.shortcuts import redirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views.generic import CreateView
@@ -29,7 +28,10 @@ def post_new(request):
             post.author = request.user
             post.published_date = timezone.now()
             post.save()
+            messages.success(request, f"New post created!")
             return redirect('post_list')
+        else:
+            messages.error(request, "New post was not created!")
     else:
         form = PostForm()
     return render(request, 'blog/post_edit.html', {'form': form})
@@ -39,21 +41,23 @@ def get_comments_tree_impl(comment):
     return [comment] + list(itertools.chain(*[get_comments_tree_impl(child) for child in comment.children()]))
 
 
-def post_detail(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-
+def get_comments_tree(post):
     comments_tree = []
     for comment in post.comments.filter(parent=None):
         comments_tree.append(get_comments_tree_impl(comment))
-    comments_tree = list(itertools.chain(*comments_tree))
+    return list(itertools.chain(*comments_tree))
 
-    paginator = Paginator(comments_tree, 3) # Show 25 contacts per page
 
-    page = request.GET.get('page')
-    if page == None:
-        page = 1
+def post_detail(request, pk):
+    post = get_object_or_404(Post, pk=pk)
 
-    comments_tree_page = paginator.get_page(page)
+    paginator = Paginator(post.comments.all(), 3) # Show 3 comments per page
+
+    page_number = request.GET.get('page')
+    if page_number == None:
+        page_number = 1
+
+    comments_tree_page = paginator.get_page(page_number)
 
     print("paginator.num_pages = ", paginator.num_pages)
     print("paginator.count = ", paginator.count)
@@ -71,25 +75,24 @@ def user_registration(request):
             username = form.cleaned_data.get('username')
             messages.success(request, f"New Account Created: {username}")
             raw_pass = form.cleaned_data.get('password')
-            login(request,user)
+            login(request, user)
             # redirect to a new URL:
             return redirect(reverse('post_list'))
         else:
             for msg in form.error_messages:
                 messages.error(request, f"{msg}: form.error_messages[msg]")
-            return render(request = request,
-                          template_name = "blog/user_registration.html",
-                          context = {"form":form})
+            return render(request=request,
+                          template_name="blog/user_registration.html",
+                          context={"form": form})
     form = RegisterForm()
-    return render(request = request,
-                          template_name = "blog/user_registration.html",
-                          context = {"form":form})
+    return render(request=request, template_name="blog/user_registration.html", context={"form": form})
 
 
 def logout_request(request):
     logout(request)
-    messages.info(request, "Logget out successfully!")
+    messages.info(request, "Logged out successfully!")
     return redirect(reverse('post_list'))
+
 
 def login_request(request):
     if request.method == "POST":
@@ -110,7 +113,7 @@ def login_request(request):
     form = AuthenticationForm()
     return render(request,
                   "blog/login.html",
-                  {"form":form})
+                  {"form": form})
 
 
 def add_comment_to_post(request, pk):
@@ -122,7 +125,10 @@ def add_comment_to_post(request, pk):
             comment.author = request.user
             comment.post = post
             comment.save()
+            messages.success(request, f"Comment successfully created!")
             return redirect('post_detail', pk=post.pk)
+        else:
+            messages.error(request, "Comment not created!")
     else:
         form = CommentForm()
     return render(request, 'blog/add_comment_to_post.html', {'form': form})
@@ -139,7 +145,10 @@ def add_reply_to_post(request, pk, parent_pk):
             comment.post = post
             comment.parent = parent_comment
             comment.save()
+            messages.success(request, f"Reply for comment successfully created!")
             return redirect('post_detail', pk=post.pk)
+        else:
+            messages.error(request, "Reply for comment was not created!")
     else:
         form = CommentForm()
     return render(request, 'blog/add_reply_to_post.html', {'form': form})
