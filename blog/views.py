@@ -131,7 +131,7 @@ def add_comment_to_post(request, pk):
             messages.error(request, "Comment not created!")
     else:
         form = CommentForm()
-    return render(request, 'blog/add_comment_to_post.html', {'form': form})
+    return render(request, 'blog/add_reply_or_comment_to_post.html', {'form': form})
 
 
 def add_reply_to_post(request, pk, parent_pk):
@@ -151,4 +151,4 @@ def add_reply_to_post(request, pk, parent_pk):
             messages.error(request, "Reply for comment was not created!")
     else:
         form = CommentForm()
-    return render(request, 'blog/add_reply_to_post.html', {'form': form})
+    return render(request, 'blog/add_reply_or_comment_to_post.html', {'form': form})
