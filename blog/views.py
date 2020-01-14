@@ -8,7 +8,7 @@ from django.views.generic import CreateView
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from blog.forms import RegisterForm
 from .models import Post, Comment
@@ -17,6 +17,13 @@ from .forms import RegisterForm, PostForm, CommentForm
 
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+    paginator: Paginator = Paginator(posts, 3)  # Show 3 posts per page
+    page = request.GET.get('page')
+    if page is None:
+        page = 1
+    posts = paginator.get_page(page)
+    print("paginator.num_pages = ", paginator.num_pages)
+    print("paginator.count = ", paginator.count)
     return render(request=request, template_name='blog/post_list.html', context={'posts': posts})
 
 
@@ -50,19 +57,17 @@ def get_comments_tree(post):
 
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
-
-    paginator = Paginator(post.comments.all(), 3) # Show 3 comments per page
-
+    paginator = Paginator(post.comments.all(), 3)  # Show 3 comments per page
     page_number = request.GET.get('page')
-    if page_number == None:
+    if page_number is None:
         page_number = 1
 
     comments_tree_page = paginator.get_page(page_number)
-
     print("paginator.num_pages = ", paginator.num_pages)
     print("paginator.count = ", paginator.count)
 
     return render(request, 'blog/post_detail.html', {'post': post, 'comments_tree_page': comments_tree_page})
+
 
 def user_registration(request):
     # if this is a POST request we need to process the form data
@@ -71,7 +76,7 @@ def user_registration(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            #validating the password match while creating the user.
+            # validating the password match while creating the user.
             username = form.cleaned_data.get('username')
             messages.success(request, f"New Account Created: {username}")
             raw_pass = form.cleaned_data.get('password')
