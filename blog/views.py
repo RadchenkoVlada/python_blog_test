@@ -4,13 +4,11 @@ from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
-from django.views.generic import CreateView
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.paginator import Paginator
 
-from blog.forms import RegisterForm
 from .models import Post, Comment
 from .forms import RegisterForm, PostForm, CommentForm
 
@@ -44,20 +42,26 @@ def post_new(request):
     return render(request, 'blog/post_edit.html', {'form': form})
 
 
-def get_comments_tree_impl(comment):
-    return [comment] + list(itertools.chain(*[get_comments_tree_impl(child) for child in comment.children()]))
+def get_comments(post):
+    first_level_comments = post.comments.filter(parent=None)
+    res = []
+    for comment in first_level_comments:
+        replies = get_replies_to_comment(comment)
+        res += replies
+    return res
 
 
-def get_comments_tree(post):
-    comments_tree = []
-    for comment in post.comments.filter(parent=None):
-        comments_tree.append(get_comments_tree_impl(comment))
-    return list(itertools.chain(*comments_tree))
+def get_replies_to_comment(comment):
+    children = comment.children()
+    res = [comment]
+    for child in children:
+        res += get_replies_to_comment(child)
+    return res
 
 
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    paginator = Paginator(post.comments.all(), 3)  # Show 3 comments per page
+    paginator = Paginator(get_comments(post), 300)  # Show 3 comments per page
     page_number = request.GET.get('page')
     if page_number is None:
         page_number = 1

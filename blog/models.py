@@ -38,3 +38,4 @@ class Comment(models.Model):
 
     def nesting_index(self):
         return 0 if self.parent is None else (self.parent.nesting_index() + 1)
+
