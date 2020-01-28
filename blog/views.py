@@ -1,6 +1,4 @@
-import itertools
-
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
@@ -61,11 +59,10 @@ def get_replies_to_comment(comment):
 
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    paginator = Paginator(get_comments(post), 300)  # Show 3 comments per page
+    paginator = Paginator(get_comments(post), 3)  # Show 3 comments per page
     page_number = request.GET.get('page')
     if page_number is None:
         page_number = 1
-
     comments_tree_page = paginator.get_page(page_number)
     print("paginator.num_pages = ", paginator.num_pages)
     print("paginator.count = ", paginator.count)
@@ -83,13 +80,12 @@ def user_registration(request):
             # validating the password match while creating the user.
             username = form.cleaned_data.get('username')
             messages.success(request, f"New Account Created: {username}")
-            raw_pass = form.cleaned_data.get('password')
             login(request, user)
             # redirect to a new URL:
             return redirect(reverse('post_list'))
         else:
             for msg in form.error_messages:
-                messages.error(request, f"{msg}: form.error_messages[msg]")
+                messages.error(request, form.error_messages[msg])
             return render(request=request,
                           template_name="blog/user_registration.html",
                           context={"form": form})
@@ -118,13 +114,13 @@ def login_request(request):
                 messages.error(request, "Invalid username or password")
         else:
             messages.error(request, "Invalid username or password")
-
     form = AuthenticationForm()
     return render(request,
                   "blog/login.html",
                   {"form": form})
 
 
+# Fix DRY(repeated code in add_comment_to_post() and add_reply_to_post() ) with class based view
 def add_comment_to_post(request, pk):
     post = get_object_or_404(Post, pk=pk)
     if request.method == "POST":
