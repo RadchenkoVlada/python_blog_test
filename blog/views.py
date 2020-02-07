@@ -1,3 +1,6 @@
+# Django
+from abc import abstractmethod
+
 from django.shortcuts import redirect
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
@@ -7,6 +10,10 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.core.paginator import Paginator
 
+from django.views import View
+
+
+# local Django
 from .models import Post, Comment
 from .forms import RegisterForm, PostForm, CommentForm
 
@@ -44,30 +51,23 @@ def get_comments(post):
     first_level_comments = post.comments.filter(parent=None)
     res = []
     for comment in first_level_comments:
-        replies = get_replies_to_comment(comment)
+        replies = get_all_replies_to_comment(comment)
         res += replies
     return res
 
 
-def get_replies_to_comment(comment):
+def get_all_replies_to_comment(comment):
     children = comment.children()
     res = [comment]
     for child in children:
-        res += get_replies_to_comment(child)
+        res += get_all_replies_to_comment(child)
     return res
 
 
 def post_detail(request, pk):
     post = get_object_or_404(Post, pk=pk)
-    paginator = Paginator(get_comments(post), 3)  # Show 3 comments per page
-    page_number = request.GET.get('page')
-    if page_number is None:
-        page_number = 1
-    comments_tree_page = paginator.get_page(page_number)
-    print("paginator.num_pages = ", paginator.num_pages)
-    print("paginator.count = ", paginator.count)
-
-    return render(request, 'blog/post_detail.html', {'post': post, 'comments_tree_page': comments_tree_page})
+    comments_tree = get_comments(post)
+    return render(request, 'blog/post_detail.html', {'post': post, 'comments_tree': comments_tree})
 
 
 def user_registration(request):
@@ -120,40 +120,80 @@ def login_request(request):
                   {"form": form})
 
 
-# Fix DRY(repeated code in add_comment_to_post() and add_reply_to_post() ) with class based view
-def add_comment_to_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    if request.method == "POST":
-        form = CommentForm(request.POST)
+
+class AddCommentOrReplyToPost(View):
+    # Do i need here __init__ method?
+    form_class = CommentForm
+    template_name = 'blog/add_reply_or_comment_to_post.html'
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    # these operations in abstractmethod must be implemented in subclasses.
+    @abstractmethod
+    def message_success(self):
+        pass
+
+    @abstractmethod
+    def message_error(self):
+        pass
+
+    def get_parent(self):
+        return None
+
+    def form_validation(self, form, post):
         if form.is_valid():
             comment = form.save(commit=False)
-            comment.author = request.user
+            comment.author = self.request.user
             comment.post = post
+            comment.parent = self.get_parent()
             comment.save()
-            messages.success(request, f"Comment successfully created!")
+            self.message_success()
+            return True
+        else:
+            self.message_error()
+            return False
+
+    """
+    Handles POST requests, instantiating a form instance and its inline
+    formsets with the passed POST variables and then checking them for
+    validity.
+    """
+    def post_impl(self, request, pk, *args, **kwargs):
+        post = get_object_or_404(Post, pk=pk)
+        form = self.form_class(self.request.POST)
+        is_valid = self.form_validation(form, post)
+        if is_valid:
             return redirect('post_detail', pk=post.pk)
         else:
-            messages.error(request, "Comment not created!")
-    else:
-        form = CommentForm()
-    return render(request, 'blog/add_reply_or_comment_to_post.html', {'form': form})
+            return render(request, self.template_name, {'form': form})
 
 
-def add_reply_to_post(request, pk, parent_pk):
-    post = get_object_or_404(Post, pk=pk)
-    parent_comment = get_object_or_404(Comment, pk=parent_pk)
-    if request.method == "POST":
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.author = request.user
-            comment.post = post
-            comment.parent = parent_comment
-            comment.save()
-            messages.success(request, f"Reply for comment successfully created!")
-            return redirect('post_detail', pk=post.pk)
-        else:
-            messages.error(request, "Reply for comment was not created!")
-    else:
-        form = CommentForm()
-    return render(request, 'blog/add_reply_or_comment_to_post.html', {'form': form})
+class AddCommentToPost(AddCommentOrReplyToPost):
+    # inherit methods from class AddCommentOrReplyToPost()
+    def message_success(self):
+        messages.success(self.request, f"Comment successfully created!")
+
+    def message_error(self):
+        messages.error(self.request, "Comment not created!")
+
+    def post(self, request, pk, *args, **kwargs):
+        return self.post_impl(request, pk, *args, **kwargs)
+
+
+class AddReplyToPost(AddCommentOrReplyToPost):
+    # inherit method post from AddCommentOrReplyToPost()
+    def message_success(self):
+        messages.success(self.request, f"Reply for comment successfully created!")
+
+    def message_error(self):
+        messages.error(self.request, "Reply for comment was not created!")
+
+    def get_parent(self):
+        return self.parent_comment
+
+    def post(self, request, pk, parent_pk, *args, **kwargs):
+        self.parent_comment = get_object_or_404(Comment, pk=parent_pk)
+        return self.post_impl(request, pk, *args, **kwargs)
+
