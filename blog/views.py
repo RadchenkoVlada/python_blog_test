@@ -1,5 +1,5 @@
 # Django
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 from django.shortcuts import redirect
 from django.utils import timezone
@@ -20,13 +20,9 @@ from .forms import RegisterForm, PostForm, CommentForm
 
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
-    paginator: Paginator = Paginator(posts, 3)  # Show 3 posts per page
-    page = request.GET.get('page')
-    if page is None:
-        page = 1
+    paginator = Paginator(posts, 3)  # Show 3 posts per page
+    page = request.GET.get('page', 1)  # method get() returns the value by the key, but not raise exception (default is 1).
     posts = paginator.get_page(page)
-    print("paginator.num_pages = ", paginator.num_pages)
-    print("paginator.count = ", paginator.count)
     return render(request=request, template_name='blog/post_list.html', context={'posts': posts})
 
 
@@ -120,8 +116,7 @@ def login_request(request):
                   {"form": form})
 
 
-
-class AddCommentOrReplyToPost(View):
+class AddCommentOrReplyToPost(ABC, View):
     # Do i need here __init__ method?
     form_class = CommentForm
     template_name = 'blog/add_reply_or_comment_to_post.html'
